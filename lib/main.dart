@@ -11,7 +11,7 @@ import 'package:marquee/marquee.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:floating/floating.dart';
+import 'package:simple_pip_mode/simple_pip_mode.dart'; // 🔥 NEW PACKAGE
 
 // --- CONFIGURATION ---
 const String m3uUrl = "https://m3u.ch/pl/b3499faa747f2cd4597756dbb5ac2336_e78e8c1a1cebb153599e2d938ea41a50.m3u";
@@ -52,8 +52,7 @@ class MxLiveApp extends StatelessWidget {
           titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
-        // 🔥 FIX: Changed CardTheme to CardThemeData
-        cardTheme: CardThemeData(
+        cardTheme: CardThemeData( // FIXED
           color: const Color(0xFF1E1E1E),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -338,29 +337,23 @@ class PlayerScreen extends StatefulWidget {
   State<PlayerScreen> createState() => _PlayerScreenState();
 }
 
-class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver {
+class _PlayerScreenState extends State<PlayerScreen> {
   late VideoPlayerController _videoPlayerController;
   ChewieController? _chewieController;
-  final Floating _floating = Floating(); 
   late List<Channel> relatedChannels;
-  bool isPiPMode = false;
+  bool isPiP = false; // PiP State
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     WakelockPlus.enable();
+    SimplePip().onPipEntered.listen((_) => setState(() => isPiP = true));
+    SimplePip().onPipExited.listen((_) => setState(() => isPiP = false));
+    
     relatedChannels = widget.allChannels
         .where((c) => c.group == widget.channel.group && c.name != widget.channel.name)
         .toList();
     initializePlayer();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.inactive) {
-      // _enablePip();
-    }
   }
 
   Future<void> initializePlayer() async {
@@ -379,16 +372,17 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
     setState(() {});
   }
 
-  Future<void> _enablePip() async {
-    final status = await _floating.enable(aspectRatio: const Rational.landscape());
-    if (status == PiPStatus.enabled) {
-      setState(() => isPiPMode = true);
+  void _enterPipMode() async {
+    bool isAvailable = await SimplePip().isPipAvailable;
+    if (isAvailable) {
+      SimplePip().enterPipMode();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("PiP not supported on this device")));
     }
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     _videoPlayerController.dispose();
     _chewieController?.dispose();
     WakelockPlus.disable();
@@ -397,101 +391,100 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
 
   @override
   Widget build(BuildContext context) {
-    return PiPSwitcher(
-      childWhenDisabled: Scaffold(
-        appBar: AppBar(title: Text(widget.channel.name)),
-        body: Column(
-          children: [
-            // VIDEO PLAYER CONTAINER
-            Stack(
-              alignment: Alignment.topRight,
+    // If in PiP mode, show ONLY video, hide scaffold & lists
+    if (isPiP) {
+      return Container(
+        color: Colors.black,
+        child: _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
+            ? Chewie(controller: _chewieController!)
+            : const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
+      );
+    }
+
+    return Scaffold(
+      appBar: AppBar(title: Text(widget.channel.name)),
+      body: Column(
+        children: [
+          // VIDEO PLAYER CONTAINER
+          Stack(
+            alignment: Alignment.topRight,
+            children: [
+              AspectRatio(
+                aspectRatio: 16 / 9,
+                child: Container(
+                  color: Colors.black,
+                  child: _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
+                      ? Chewie(controller: _chewieController!)
+                      : const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: IconButton(
+                  onPressed: _enterPipMode,
+                  icon: const Icon(Icons.picture_in_picture_alt, color: Colors.white),
+                  tooltip: "Enter PiP Mode",
+                  style: IconButton.styleFrom(backgroundColor: Colors.black45),
+                ),
+              )
+            ],
+          ),
+
+          // CONTENT BELOW PLAYER
+          Expanded(
+            child: Column(
               children: [
-                AspectRatio(
-                  aspectRatio: 16 / 9,
+                GestureDetector(
+                  onTap: () => launchUrl(Uri.parse(telegramUrl), mode: LaunchMode.externalApplication),
                   child: Container(
-                    color: Colors.black,
-                    child: _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
-                        ? Chewie(controller: _chewieController!)
-                        : const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    color: const Color(0xFF0088CC),
+                    child: const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.telegram, color: Colors.white),
+                        SizedBox(width: 10),
+                        Text("JOIN TELEGRAM CHANNEL", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ],
+                    ),
                   ),
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: IconButton(
-                    onPressed: _enablePip,
-                    icon: const Icon(Icons.picture_in_picture_alt, color: Colors.white),
-                    tooltip: "Enter PiP Mode",
-                    style: IconButton.styleFrom(backgroundColor: Colors.black45),
+                
+                const Padding(
+                  padding: EdgeInsets.all(10),
+                  child: Align(alignment: Alignment.centerLeft, child: Text("More Channels", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey))),
+                ),
+                
+                Expanded(
+                  child: ListView.builder(
+                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                    itemCount: relatedChannels.length,
+                    itemBuilder: (ctx, index) {
+                      final ch = relatedChannels[index];
+                      return ListTile(
+                        contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                        leading: Container(
+                          width: 60, height: 40,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[900],
+                            borderRadius: BorderRadius.circular(6),
+                            image: ch.logo.isNotEmpty ? DecorationImage(image: CachedNetworkImageProvider(ch.logo), fit: BoxFit.contain) : null,
+                          ),
+                        ),
+                        title: Text(ch.name, style: const TextStyle(color: Colors.white)),
+                        trailing: const Icon(Icons.play_circle_outline, color: Colors.redAccent),
+                        onTap: () => Navigator.pushReplacement(
+                          context, MaterialPageRoute(builder: (_) => PlayerScreen(channel: ch, allChannels: widget.allChannels))
+                        ),
+                      );
+                    },
                   ),
-                )
+                ),
               ],
             ),
-
-            // CONTENT BELOW PLAYER
-            Expanded(
-              child: Column(
-                children: [
-                  GestureDetector(
-                    onTap: () => launchUrl(Uri.parse(telegramUrl), mode: LaunchMode.externalApplication),
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      color: const Color(0xFF0088CC),
-                      child: const Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(Icons.telegram, color: Colors.white),
-                          SizedBox(width: 10),
-                          Text("JOIN TELEGRAM CHANNEL", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                        ],
-                      ),
-                    ),
-                  ),
-                  
-                  const Padding(
-                    padding: EdgeInsets.all(10),
-                    child: Align(alignment: Alignment.centerLeft, child: Text("More Channels", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey))),
-                  ),
-                  
-                  Expanded(
-                    child: ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      itemCount: relatedChannels.length,
-                      itemBuilder: (ctx, index) {
-                        final ch = relatedChannels[index];
-                        return ListTile(
-                          contentPadding: const EdgeInsets.symmetric(vertical: 4),
-                          leading: Container(
-                            width: 60, height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.grey[900],
-                              borderRadius: BorderRadius.circular(6),
-                              image: ch.logo.isNotEmpty ? DecorationImage(image: CachedNetworkImageProvider(ch.logo), fit: BoxFit.contain) : null,
-                            ),
-                          ),
-                          title: Text(ch.name, style: const TextStyle(color: Colors.white)),
-                          trailing: const Icon(Icons.play_circle_outline, color: Colors.redAccent),
-                          onTap: () => Navigator.pushReplacement(
-                            context, MaterialPageRoute(builder: (_) => PlayerScreen(channel: ch, allChannels: widget.allChannels))
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-      childWhenEnabled: AspectRatio(
-        aspectRatio: 16 / 9,
-        child: Container(
-          color: Colors.black,
-          child: _chewieController != null
-              ? Chewie(controller: _chewieController!)
-              : const Center(child: CircularProgressIndicator()),
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -513,7 +506,7 @@ class InfoPage extends StatelessWidget {
             Image.asset('assets/logo.png', width: 100, errorBuilder: (c,o,s)=>const Icon(Icons.live_tv, size: 80, color: Colors.red)),
             const SizedBox(height: 15),
             const Text("mxliveoo", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-            const Text("v1.1.0 (Premium)", style: TextStyle(color: Colors.grey)),
+            const Text("v1.2.0 (Premium)", style: TextStyle(color: Colors.grey)),
             
             const SizedBox(height: 30),
             
