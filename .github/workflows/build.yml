@@ -20,20 +20,28 @@ jobs:
       - name: Initialize Project
         run: flutter create . --org com.mxliveoo.tv --project-name mxliveoo
 
-      # ICON MAGIC: Copies logo.png to all icon folders
-      - name: Set App Icons
+      # FIX: Download a valid PNG from internet to prevent build fail
+      - name: Set App Icons (Auto-Fix)
         run: |
+          # Downloading a Live TV Icon from internet to ensure valid PNG
+          curl -L -o valid_logo.png "https://cdn-icons-png.flaticon.com/512/3163/3163478.png"
+
           mkdir -p android/app/src/main/res/mipmap-mdpi
           mkdir -p android/app/src/main/res/mipmap-hdpi
           mkdir -p android/app/src/main/res/mipmap-xhdpi
           mkdir -p android/app/src/main/res/mipmap-xxhdpi
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
           
-          cp assets/logo.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
-          cp assets/logo.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
-          cp assets/logo.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
-          cp assets/logo.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-          cp assets/logo.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          # Copying the downloaded valid logo to all folders
+          cp valid_logo.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          cp valid_logo.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          cp valid_logo.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          cp valid_logo.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          cp valid_logo.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+          
+          # Also updating assets logo so app UI doesn't crash
+          mkdir -p assets
+          cp valid_logo.png assets/logo.png
 
       - name: Install Dependencies
         run: flutter pub get
