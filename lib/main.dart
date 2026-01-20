@@ -11,7 +11,6 @@ import 'package:marquee/marquee.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:simple_pip_mode/simple_pip_mode.dart'; // 🔥 NEW PACKAGE
 
 // --- CONFIGURATION ---
 const String m3uUrl = "https://m3u.ch/pl/b3499faa747f2cd4597756dbb5ac2336_e78e8c1a1cebb153599e2d938ea41a50.m3u";
@@ -52,7 +51,8 @@ class MxLiveApp extends StatelessWidget {
           titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
-        cardTheme: CardThemeData( // FIXED
+        // Stable Card Theme Fix
+        cardTheme: CardThemeData(
           color: const Color(0xFF1E1E1E),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -232,7 +232,7 @@ class _HomePageState extends State<HomePage> {
               onChanged: filterChannels,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                hintText: "Search 500+ Channels...",
+                hintText: "Search Channels...",
                 hintStyle: TextStyle(color: Colors.grey.shade600),
                 prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 filled: true,
@@ -327,7 +327,7 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// --- PLAYER SCREEN (With PiP) ---
+// --- PLAYER SCREEN (Stable) ---
 class PlayerScreen extends StatefulWidget {
   final Channel channel;
   final List<Channel> allChannels;
@@ -341,15 +341,11 @@ class _PlayerScreenState extends State<PlayerScreen> {
   late VideoPlayerController _videoPlayerController;
   ChewieController? _chewieController;
   late List<Channel> relatedChannels;
-  bool isPiP = false; // PiP State
 
   @override
   void initState() {
     super.initState();
     WakelockPlus.enable();
-    SimplePip().onPipEntered.listen((_) => setState(() => isPiP = true));
-    SimplePip().onPipExited.listen((_) => setState(() => isPiP = false));
-    
     relatedChannels = widget.allChannels
         .where((c) => c.group == widget.channel.group && c.name != widget.channel.name)
         .toList();
@@ -372,15 +368,6 @@ class _PlayerScreenState extends State<PlayerScreen> {
     setState(() {});
   }
 
-  void _enterPipMode() async {
-    bool isAvailable = await SimplePip().isPipAvailable;
-    if (isAvailable) {
-      SimplePip().enterPipMode();
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("PiP not supported on this device")));
-    }
-  }
-
   @override
   void dispose() {
     _videoPlayerController.dispose();
@@ -391,46 +378,20 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // If in PiP mode, show ONLY video, hide scaffold & lists
-    if (isPiP) {
-      return Container(
-        color: Colors.black,
-        child: _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
-            ? Chewie(controller: _chewieController!)
-            : const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(title: Text(widget.channel.name)),
       body: Column(
         children: [
-          // VIDEO PLAYER CONTAINER
-          Stack(
-            alignment: Alignment.topRight,
-            children: [
-              AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Container(
-                  color: Colors.black,
-                  child: _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
-                      ? Chewie(controller: _chewieController!)
-                      : const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(8.0),
-                child: IconButton(
-                  onPressed: _enterPipMode,
-                  icon: const Icon(Icons.picture_in_picture_alt, color: Colors.white),
-                  tooltip: "Enter PiP Mode",
-                  style: IconButton.styleFrom(backgroundColor: Colors.black45),
-                ),
-              )
-            ],
+          AspectRatio(
+            aspectRatio: 16 / 9,
+            child: Container(
+              color: Colors.black,
+              child: _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
+                  ? Chewie(controller: _chewieController!)
+                  : const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
+            ),
           ),
 
-          // CONTENT BELOW PLAYER
           Expanded(
             child: Column(
               children: [
@@ -506,13 +467,13 @@ class InfoPage extends StatelessWidget {
             Image.asset('assets/logo.png', width: 100, errorBuilder: (c,o,s)=>const Icon(Icons.live_tv, size: 80, color: Colors.red)),
             const SizedBox(height: 15),
             const Text("mxliveoo", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-            const Text("v1.2.0 (Premium)", style: TextStyle(color: Colors.grey)),
+            const Text("v1.3.0 (Stable)", style: TextStyle(color: Colors.grey)),
             
             const SizedBox(height: 30),
             
             _buildInfoCard(
               title: "App Features",
-              content: "• 500+ Live Channels\n• Picture-in-Picture (PiP) Mode\n• Fast Streaming (M3U8/MP4)\n• Real-time Updates via Telegram",
+              content: "• 500+ Live Channels\n• Fast Streaming (M3U8/MP4)\n• Real-time Updates via Telegram",
               icon: Icons.featured_play_list,
             ),
             
