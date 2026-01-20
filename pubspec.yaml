@@ -1,7 +1,7 @@
 name: mxliveoo
 description: Premium Live TV Streaming App.
 publish_to: 'none'
-version: 1.1.0+1
+version: 1.2.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -21,7 +21,7 @@ dependencies:
   video_player: ^2.8.1
   chewie: ^1.7.1
   wakelock_plus: ^1.1.4
-  floating: ^2.0.0      # New package for PiP mode
+  simple_pip_mode: ^1.1.0   # 🔥 NEW PIP PACKAGE 🔥
 
 dev_dependencies:
   flutter_test:
