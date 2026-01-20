@@ -15,7 +15,7 @@ import 'package:floating/floating.dart';
 
 // --- CONFIGURATION ---
 const String m3uUrl = "https://m3u.ch/pl/b3499faa747f2cd4597756dbb5ac2336_e78e8c1a1cebb153599e2d938ea41a50.m3u";
-const String noticeJsonUrl = "https://raw.githubusercontent.com/v5on/api/main/notice.json";
+const String noticeJsonUrl = "https://raw.githubusercontent.com/mhmimxl/mxliveoo/refs/heads/main/notice.json";
 const String telegramUrl = "https://t.me/mxonlive";
 const String contactEmail = "mailto:sultanarabi161@gmail.com";
 
