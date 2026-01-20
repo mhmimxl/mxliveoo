@@ -13,8 +13,8 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 // --- CONFIGURATION ---
 const String m3uUrl = "https://m3u.ch/pl/b3499faa747f2cd4597756dbb5ac2336_e78e8c1a1cebb153599e2d938ea41a50.m3u";
-const String noticeJsonUrl = "https://raw.githubusercontent.com/v5on/api/main/notice.json"; // আপনার জেসন লিংক এখানে দিবেন
-const String telegramUrl = "https://t.me/YourChannel"; // আপনার টেলিগ্রাম লিংক
+const String noticeJsonUrl = "https://raw.githubusercontent.com/v5on/api/main/notice.json"; 
+const String telegramUrl = "https://t.me/YourChannel"; 
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -78,7 +78,7 @@ class _SplashScreenState extends State<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset('assets/logo.png', width: 120, height: 120),
+            Image.asset('assets/logo.png', width: 120, height: 120, errorBuilder: (c,o,s)=>const Icon(Icons.live_tv, size: 80, color: Colors.red)),
             const SizedBox(height: 20),
             const CircularProgressIndicator(color: Colors.redAccent),
           ],
@@ -95,7 +95,7 @@ class HomePage extends StatefulWidget {
   State<HomePage> createState() => _HomePageState();
 }
 
-class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
+class _HomePageState extends State<HomePage> {
   List<Channel> allChannels = [];
   List<Channel> displayedChannels = [];
   List<String> categories = ["All"];
@@ -112,7 +112,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
     fetchNotice();
   }
 
-  // Fetch JSON Notice
   Future<void> fetchNotice() async {
     try {
       final res = await http.get(Uri.parse(noticeJsonUrl));
@@ -122,10 +121,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
           noticeMsg = data['notice'] ?? "";
         });
       }
-    } catch (_) {} // Silent fail for notice
+    } catch (_) {}
   }
 
-  // Fetch & Parse M3U
   Future<void> fetchData() async {
     try {
       final response = await http.get(Uri.parse(m3uUrl));
@@ -150,8 +148,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
     for (String line in lines) {
       if (line.startsWith("#EXTINF:")) {
-        // Parse Meta
-        // Simple regex to extract data. Can be improved based on specific m3u format
         final nameMatch = RegExp(r',(.*)').firstMatch(line);
         name = nameMatch?.group(1)?.trim() ?? "Unknown Channel";
 
@@ -163,10 +159,9 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         
         cats.add(group);
       } else if (line.isNotEmpty && !line.startsWith("#")) {
-        // This is URL
         if (name != null) {
           channels.add(Channel(name: name, logo: logo ?? "", url: line.trim(), group: group ?? "Others"));
-          name = null; // Reset
+          name = null;
         }
       }
     }
@@ -204,7 +199,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
         title: const Text("mxliveoo", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Image.asset('assets/logo.png'),
+          child: Image.asset('assets/logo.png', errorBuilder: (c,o,s)=>const Icon(Icons.live_tv)),
         ),
         actions: [
           IconButton(
@@ -215,7 +210,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
       ),
       body: Column(
         children: [
-          // NOTICE BAR
           if (noticeMsg.isNotEmpty)
             Container(
               height: 30,
@@ -229,7 +223,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               ),
             ),
 
-          // SEARCH BAR
           Padding(
             padding: const EdgeInsets.all(10.0),
             child: TextField(
@@ -248,7 +241,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
             ),
           ),
 
-          // CATEGORY TABS
           if (!isLoading && !isError)
             SizedBox(
               height: 40,
@@ -278,7 +270,6 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
 
           const SizedBox(height: 10),
 
-          // GRID VIEW
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator(color: Colors.redAccent))
@@ -297,7 +288,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                     : GridView.builder(
                         padding: const EdgeInsets.all(10),
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4, // Requested: 4 items per row
+                          crossAxisCount: 4,
                           childAspectRatio: 0.8,
                           crossAxisSpacing: 10,
                           mainAxisSpacing: 10,
@@ -311,7 +302,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
                               MaterialPageRoute(
                                 builder: (_) => PlayerScreen(
                                   channel: channel,
-                                  allChannels: allChannels, // For related list
+                                  allChannels: allChannels,
                                 ),
                               ),
                             ),
@@ -374,8 +365,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
   @override
   void initState() {
     super.initState();
-    WakelockPlus.enable(); // Keep screen on
-    // Filter related channels by same group
+    WakelockPlus.enable();
     relatedChannels = widget.allChannels
         .where((c) => c.group == widget.channel.group && c.name != widget.channel.name)
         .toList();
@@ -384,6 +374,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   Future<void> initializePlayer() async {
     try {
+      // Support for networkUrl handles both HTTP and HTTPS if Cleartext is enabled in Manifest
       _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(widget.channel.url));
       await _videoPlayerController.initialize();
       
@@ -392,14 +383,26 @@ class _PlayerScreenState extends State<PlayerScreen> {
         autoPlay: true,
         looping: false,
         aspectRatio: 16 / 9,
+        isLive: true, // Optimized for Live TV
+        allowedScreenSleep: false,
         errorBuilder: (context, errorMessage) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.broken_image, color: Colors.white54, size: 50),
+                const Icon(Icons.error, color: Colors.red, size: 40),
                 const SizedBox(height: 10),
-                Text("Stream Error: $errorMessage", style: const TextStyle(color: Colors.white)),
+                Text("Error: $errorMessage", style: const TextStyle(color: Colors.white)),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  onPressed: () {
+                    setState(() {
+                      isError = false;
+                      initializePlayer();
+                    });
+                  },
+                  child: const Text("Retry"),
+                )
               ],
             ),
           );
@@ -407,7 +410,7 @@ class _PlayerScreenState extends State<PlayerScreen> {
         materialProgressColors: ChewieProgressColors(
           playedColor: Colors.redAccent,
           handleColor: Colors.redAccent,
-          backgroundColor: Colors.grey,
+          backgroundColor: Colors.grey.shade800,
           bufferedColor: Colors.white30,
         ),
       );
@@ -439,43 +442,52 @@ class _PlayerScreenState extends State<PlayerScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // VIDEO PLAYER AREA
+          // PLAYER
           AspectRatio(
             aspectRatio: 16 / 9,
             child: Container(
               color: Colors.black,
               child: isError
-                  ? const Center(child: Text("Stream Failed to Load", style: TextStyle(color: Colors.red)))
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.broken_image, color: Colors.red, size: 40),
+                          const SizedBox(height: 10),
+                          const Text("Stream Error (Offline or Unsupported)", style: TextStyle(color: Colors.white)),
+                        ],
+                      ),
+                    )
                   : _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
                       ? Chewie(controller: _chewieController!)
                       : const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
             ),
           ),
 
-          // JOIN TELEGRAM BANNER
+          // TELEGRAM BANNER
           GestureDetector(
             onTap: _launchTelegram,
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              color: const Color(0xFF0088CC), // Telegram Blue
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              color: const Color(0xFF0088CC),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.telegram, color: Colors.white),
                   SizedBox(width: 10),
-                  Text("JOIN OUR TELEGRAM CHANNEL", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  Text("JOIN TELEGRAM CHANNEL", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
                 ],
               ),
             ),
           ),
 
+          // RELATED LIST
           const Padding(
             padding: EdgeInsets.all(10.0),
-            child: Text("Related Channels", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)),
+            child: Text("More Channels", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)),
           ),
 
-          // RELATED CHANNELS
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -483,22 +495,21 @@ class _PlayerScreenState extends State<PlayerScreen> {
               itemBuilder: (ctx, index) {
                 final ch = relatedChannels[index];
                 return ListTile(
-                  contentPadding: EdgeInsets.zero,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 5),
                   leading: Container(
-                    width: 50,
-                    height: 50,
+                    width: 60,
+                    height: 40,
                     decoration: BoxDecoration(
                       color: Colors.grey[900],
                       borderRadius: BorderRadius.circular(5),
-                      image: ch.logo.isNotEmpty ? DecorationImage(image: CachedNetworkImageProvider(ch.logo)) : null,
+                      image: ch.logo.isNotEmpty ? DecorationImage(image: CachedNetworkImageProvider(ch.logo), fit: BoxFit.contain) : null,
                     ),
                     child: ch.logo.isEmpty ? const Icon(Icons.tv, size: 20) : null,
                   ),
-                  title: Text(ch.name, style: const TextStyle(color: Colors.white)),
+                  title: Text(ch.name, style: const TextStyle(color: Colors.white, fontSize: 14)),
                   subtitle: Text(ch.group, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-                  trailing: const Icon(Icons.play_circle_fill, color: Colors.redAccent),
+                  trailing: const Icon(Icons.play_circle_outline, color: Colors.redAccent),
                   onTap: () {
-                    // Replace current player screen with new channel
                     Navigator.pushReplacement(
                       context,
                       MaterialPageRoute(
@@ -523,31 +534,24 @@ class InfoPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("App Info")),
+      appBar: AppBar(title: const Text("About")),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(20.0),
+          padding: const EdgeInsets.all(30.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('assets/logo.png', width: 100),
+              Image.asset('assets/logo.png', width: 100, errorBuilder: (c,o,s)=>const Icon(Icons.live_tv, size: 80, color: Colors.red)),
               const SizedBox(height: 20),
-              const Text("mxliveoo", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text("mxliveoo", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
               const Text("Version 1.0.0", style: TextStyle(color: Colors.grey)),
-              const SizedBox(height: 30),
+              const SizedBox(height: 40),
+              const Text("Premium Live TV Streaming App", style: TextStyle(fontSize: 16)),
+              const SizedBox(height: 40),
               const Divider(),
               const SizedBox(height: 20),
-              const Text("Developer Info", style: TextStyle(fontSize: 18, color: Colors.redAccent)),
-              const SizedBox(height: 10),
-              const Text("Developed by: Sultan Arabi", style: TextStyle(fontSize: 16)),
-              const Text("Role: Lettel Developer", style: TextStyle(color: Colors.grey)),
-              const SizedBox(height: 20),
-              ElevatedButton.icon(
-                onPressed: () => launchUrl(Uri.parse(telegramUrl), mode: LaunchMode.externalApplication),
-                icon: const Icon(Icons.contact_support),
-                style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0088CC)),
-                label: const Text("Contact Developer"),
-              ),
+              const Text("Developer", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
+              const Text("Sultan Arabi (Lettel Developer)", style: TextStyle(fontSize: 18)),
             ],
           ),
         ),
