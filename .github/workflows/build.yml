@@ -20,11 +20,14 @@ jobs:
       - name: Initialize Project
         run: flutter create . --org com.mxliveoo.tv --project-name mxliveoo
 
-      # FIX: Download a valid PNG from internet to prevent build fail
-      - name: Set App Icons (Auto-Fix)
+      # ICON FIX: Uses your logo if exists, else downloads a placeholder
+      - name: Set App Icons
         run: |
-          # Downloading a Live TV Icon from internet to ensure valid PNG
-          curl -L -o valid_logo.png "https://cdn-icons-png.flaticon.com/512/3163/3163478.png"
+          # If logo.png doesn't exist in assets, download a placeholder
+          if [ ! -f assets/logo.png ]; then
+            mkdir -p assets
+            curl -L -o assets/logo.png "https://cdn-icons-png.flaticon.com/512/3163/3163478.png"
+          fi
 
           mkdir -p android/app/src/main/res/mipmap-mdpi
           mkdir -p android/app/src/main/res/mipmap-hdpi
@@ -32,16 +35,11 @@ jobs:
           mkdir -p android/app/src/main/res/mipmap-xxhdpi
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
           
-          # Copying the downloaded valid logo to all folders
-          cp valid_logo.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
-          cp valid_logo.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
-          cp valid_logo.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
-          cp valid_logo.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-          cp valid_logo.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-          
-          # Also updating assets logo so app UI doesn't crash
-          mkdir -p assets
-          cp valid_logo.png assets/logo.png
+          cp assets/logo.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+          cp assets/logo.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+          cp assets/logo.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+          cp assets/logo.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+          cp assets/logo.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
 
       - name: Install Dependencies
         run: flutter pub get
