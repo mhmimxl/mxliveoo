@@ -20,21 +20,17 @@ jobs:
       - name: Initialize Project
         run: flutter create . --org com.mxliveoo.tv --project-name mxliveoo
 
-      # ICON FIX: Uses your logo if exists, else downloads a placeholder
       - name: Set App Icons
         run: |
-          # If logo.png doesn't exist in assets, download a placeholder
           if [ ! -f assets/logo.png ]; then
             mkdir -p assets
             curl -L -o assets/logo.png "https://cdn-icons-png.flaticon.com/512/3163/3163478.png"
           fi
-
           mkdir -p android/app/src/main/res/mipmap-mdpi
           mkdir -p android/app/src/main/res/mipmap-hdpi
           mkdir -p android/app/src/main/res/mipmap-xhdpi
           mkdir -p android/app/src/main/res/mipmap-xxhdpi
           mkdir -p android/app/src/main/res/mipmap-xxxhdpi
-          
           cp assets/logo.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
           cp assets/logo.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
           cp assets/logo.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
