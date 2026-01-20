@@ -11,13 +11,13 @@ import 'package:marquee/marquee.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
-import 'package:floating/floating.dart'; // PiP Package
+import 'package:floating/floating.dart';
 
 // --- CONFIGURATION ---
 const String m3uUrl = "https://m3u.ch/pl/b3499faa747f2cd4597756dbb5ac2336_e78e8c1a1cebb153599e2d938ea41a50.m3u";
 const String noticeJsonUrl = "https://raw.githubusercontent.com/v5on/api/main/notice.json";
-const String telegramUrl = "https://t.me/YourChannel";
-const String contactEmail = "mailto:sultan@example.com"; // আপনার ইমেইল ফরম্যাট
+const String telegramUrl = "https://t.me/mxonlive";
+const String contactEmail = "mailto:sultanarabi161@gmail.com";
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,7 +52,8 @@ class MxLiveApp extends StatelessWidget {
           titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
-        cardTheme: CardTheme(
+        // 🔥 FIX: Changed CardTheme to CardThemeData
+        cardTheme: CardThemeData(
           color: const Color(0xFF1E1E1E),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
@@ -278,7 +279,7 @@ class _HomePageState extends State<HomePage> {
                 : GridView.builder(
                     padding: const EdgeInsets.all(12),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4, // 4 Items per row
+                      crossAxisCount: 4, 
                       childAspectRatio: 0.85,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
@@ -340,7 +341,7 @@ class PlayerScreen extends StatefulWidget {
 class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver {
   late VideoPlayerController _videoPlayerController;
   ChewieController? _chewieController;
-  final Floating _floating = Floating(); // PiP Controller
+  final Floating _floating = Floating(); 
   late List<Channel> relatedChannels;
   bool isPiPMode = false;
 
@@ -357,9 +358,8 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Detect when user leaves app to potentially trigger PiP automatically (if configured)
     if (state == AppLifecycleState.inactive) {
-      // _enablePip(); // Optional: Auto enable on minimize
+      // _enablePip();
     }
   }
 
@@ -415,7 +415,6 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
                         : const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
                   ),
                 ),
-                // PIP BUTTON (Overlay on Video)
                 Padding(
                   padding: const EdgeInsets.all(8.0),
                   child: IconButton(
@@ -428,7 +427,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
               ],
             ),
 
-            // CONTENT BELOW PLAYER (Hidden in PiP)
+            // CONTENT BELOW PLAYER
             Expanded(
               child: Column(
                 children: [
@@ -485,7 +484,6 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
           ],
         ),
       ),
-      // PiP Mode UI (Only Video)
       childWhenEnabled: AspectRatio(
         aspectRatio: 16 / 9,
         child: Container(
@@ -499,7 +497,7 @@ class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver
   }
 }
 
-// --- INFO PAGE (UPDATED) ---
+// --- INFO PAGE ---
 class InfoPage extends StatelessWidget {
   const InfoPage({super.key});
 
@@ -519,16 +517,14 @@ class InfoPage extends StatelessWidget {
             
             const SizedBox(height: 30),
             
-            // App Info Card
             _buildInfoCard(
               title: "App Features",
-              content: "• 500+ Live Channels\n• Picture-in-Picture (PiP) Mode\n• Fast Streaming (M3U8/MP4)\n• Real-time Updates",
+              content: "• 500+ Live Channels\n• Picture-in-Picture (PiP) Mode\n• Fast Streaming (M3U8/MP4)\n• Real-time Updates via Telegram",
               icon: Icons.featured_play_list,
             ),
             
             const SizedBox(height: 15),
 
-            // Dev Info Card
             _buildInfoCard(
               title: "Developer",
               content: "Name: Sultan Arabi\nRole: Lettel Developer\nFocus: Flutter & Streaming Tech",
@@ -537,7 +533,6 @@ class InfoPage extends StatelessWidget {
 
             const SizedBox(height: 30),
 
-            // Contact Button
             SizedBox(
               width: double.infinity,
               height: 50,
