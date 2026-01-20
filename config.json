@@ -1,14 +1,35 @@
 {
-  "notice": "Welcome to mxonlive V2! Server 1 is optimized for Sports.",
-  "about_notice": "Disclaimer: This app does not host any content. All content is provided by third-party servers. Contact us for removal.",
+  "notice": "🔥 LIVE: Watch BPL 2026 Free! New Samsung TV Plus & BDIX Servers Added. Update Now!",
+  
+  "about_notice": "Disclaimer: mxonlive does not host any content. All channels are provided by third-party servers (Samsung TV, XFireFlix, Margify). If any channel is down, try switching the server from the home page capsule list.",
+  
   "update_data": {
     "show": true,
     "version": "v2.5.0",
-    "note": "New Sports Channels Added!",
-    "download_url": "https://example.com/mxonlive.apk"
+    "note": "Added 4 New Premium Servers (BPL, Samsung TV, BDIX). Fixed Player Bugs.",
+    "download_url": "https://example.com/mxonlive-v2.5.apk"
   },
+  
   "servers": [
-    { "id": "s1", "name": "Toffee Live", "url": "https://private-zone-by-xfireflix.pages.dev/playlist-isp-bdix.m3u" },
-    { "id": "s2", "name": "Global TV", "url": "https://private-zone-by-xfireflix.pages.dev/playlist-isp-bdix.m3u" }
+    {
+      "id": "s1",
+      "name": "BPL Live 🏏",
+      "url": "https://raw.githubusercontent.com/abusaeeidx/BPL-Playlist/refs/heads/main/playlist.m3u"
+    },
+    {
+      "id": "s2",
+      "name": "Samsung TV 🌍",
+      "url": "https://iptv-scraper-zilla.pages.dev/SamsungTVPlus-All.m3u"
+    },
+    {
+      "id": "s3",
+      "name": "BDIX / ISP 🇧🇩",
+      "url": "https://private-zone-by-xfireflix.pages.dev/playlist-isp-bdix.m3u"
+    },
+    {
+      "id": "s4",
+      "name": "Margify TV 📺",
+      "url": "https://cdn-data-margify-tv-for-user.pages.dev/playlist.m3u"
+    }
   ]
 }
