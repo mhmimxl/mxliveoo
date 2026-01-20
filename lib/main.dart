@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
@@ -10,24 +11,25 @@ import 'package:marquee/marquee.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:floating/floating.dart'; // PiP Package
 
 // --- CONFIGURATION ---
 const String m3uUrl = "https://m3u.ch/pl/b3499faa747f2cd4597756dbb5ac2336_e78e8c1a1cebb153599e2d938ea41a50.m3u";
-const String noticeJsonUrl = "https://raw.githubusercontent.com/v5on/api/main/notice.json"; 
-const String telegramUrl = "https://t.me/YourChannel"; 
+const String noticeJsonUrl = "https://raw.githubusercontent.com/v5on/api/main/notice.json";
+const String telegramUrl = "https://t.me/YourChannel";
+const String contactEmail = "mailto:sultan@example.com"; // আপনার ইমেইল ফরম্যাট
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MxLiveApp());
 }
 
-// --- DATA MODELS ---
+// --- MODELS ---
 class Channel {
   final String name;
   final String logo;
   final String url;
   final String group;
-
   Channel({required this.name, required this.logo, required this.url, required this.group});
 }
 
@@ -41,21 +43,26 @@ class MxLiveApp extends StatelessWidget {
       title: 'mxliveoo',
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark().copyWith(
-        scaffoldBackgroundColor: const Color(0xFF121212),
+        scaffoldBackgroundColor: const Color(0xFF0F0F0F),
         primaryColor: Colors.redAccent,
         appBarTheme: const AppBarTheme(
-          backgroundColor: Color(0xFF1E1E1E),
+          backgroundColor: Color(0xFF181818),
           elevation: 0,
           centerTitle: true,
+          titleTextStyle: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
         textTheme: GoogleFonts.poppinsTextTheme(ThemeData.dark().textTheme),
+        cardTheme: CardTheme(
+          color: const Color(0xFF1E1E1E),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        ),
       ),
       home: const SplashScreen(),
     );
   }
 }
 
-// --- SPLASH SCREEN ---
+// --- SPLASH ---
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
   @override
@@ -117,9 +124,7 @@ class _HomePageState extends State<HomePage> {
       final res = await http.get(Uri.parse(noticeJsonUrl));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
-        setState(() {
-          noticeMsg = data['notice'] ?? "";
-        });
+        setState(() => noticeMsg = data['notice'] ?? "");
       }
     } catch (_) {}
   }
@@ -149,14 +154,11 @@ class _HomePageState extends State<HomePage> {
     for (String line in lines) {
       if (line.startsWith("#EXTINF:")) {
         final nameMatch = RegExp(r',(.*)').firstMatch(line);
-        name = nameMatch?.group(1)?.trim() ?? "Unknown Channel";
-
+        name = nameMatch?.group(1)?.trim() ?? "Unknown";
         final logoMatch = RegExp(r'tvg-logo="([^"]*)"').firstMatch(line);
         logo = logoMatch?.group(1) ?? "";
-
         final groupMatch = RegExp(r'group-title="([^"]*)"').firstMatch(line);
         group = groupMatch?.group(1) ?? "Others";
-        
         cats.add(group);
       } else if (line.isNotEmpty && !line.startsWith("#")) {
         if (name != null) {
@@ -196,7 +198,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("mxliveoo", style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+        title: const Text("mxliveoo"),
         leading: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Image.asset('assets/logo.png', errorBuilder: (c,o,s)=>const Icon(Icons.live_tv)),
@@ -212,8 +214,8 @@ class _HomePageState extends State<HomePage> {
         children: [
           if (noticeMsg.isNotEmpty)
             Container(
-              height: 30,
-              color: Colors.redAccent.withOpacity(0.1),
+              height: 35,
+              color: Colors.redAccent.withOpacity(0.15),
               child: Marquee(
                 text: noticeMsg,
                 style: const TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
@@ -224,18 +226,18 @@ class _HomePageState extends State<HomePage> {
             ),
 
           Padding(
-            padding: const EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(12.0),
             child: TextField(
               controller: searchController,
               onChanged: filterChannels,
               style: const TextStyle(color: Colors.white),
               decoration: InputDecoration(
-                hintText: "Search channels...",
+                hintText: "Search 500+ Channels...",
                 hintStyle: TextStyle(color: Colors.grey.shade600),
                 prefixIcon: const Icon(Icons.search, color: Colors.grey),
                 filled: true,
-                fillColor: const Color(0xFF2C2C2C),
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: BorderSide.none),
+                fillColor: const Color(0xFF252525),
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
                 contentPadding: const EdgeInsets.symmetric(vertical: 0),
               ),
             ),
@@ -243,7 +245,7 @@ class _HomePageState extends State<HomePage> {
 
           if (!isLoading && !isError)
             SizedBox(
-              height: 40,
+              height: 45,
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -258,7 +260,7 @@ class _HomePageState extends State<HomePage> {
                       selected: isSelected,
                       onSelected: (_) => changeCategory(cat),
                       selectedColor: Colors.redAccent,
-                      backgroundColor: const Color(0xFF2C2C2C),
+                      backgroundColor: const Color(0xFF252525),
                       labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.grey),
                       side: BorderSide.none,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -273,71 +275,51 @@ class _HomePageState extends State<HomePage> {
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator(color: Colors.redAccent))
-                : isError
-                    ? Center(
+                : GridView.builder(
+                    padding: const EdgeInsets.all(12),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4, // 4 Items per row
+                      childAspectRatio: 0.85,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
+                    ),
+                    itemCount: displayedChannels.length,
+                    itemBuilder: (ctx, index) {
+                      final channel = displayedChannels[index];
+                      return GestureDetector(
+                        onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => PlayerScreen(channel: channel, allChannels: allChannels),
+                          ),
+                        ),
                         child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Icon(Icons.error_outline, size: 50, color: Colors.red),
-                            const SizedBox(height: 10),
-                            const Text("Failed to load channels"),
-                            TextButton(onPressed: fetchData, child: const Text("Retry"))
-                          ],
-                        ),
-                      )
-                    : GridView.builder(
-                        padding: const EdgeInsets.all(10),
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 4,
-                          childAspectRatio: 0.8,
-                          crossAxisSpacing: 10,
-                          mainAxisSpacing: 10,
-                        ),
-                        itemCount: displayedChannels.length,
-                        itemBuilder: (ctx, index) {
-                          final channel = displayedChannels[index];
-                          return GestureDetector(
-                            onTap: () => Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => PlayerScreen(
-                                  channel: channel,
-                                  allChannels: allChannels,
+                            Expanded(
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF252525),
+                                  borderRadius: BorderRadius.circular(12),
+                                  image: channel.logo.isNotEmpty
+                                      ? DecorationImage(image: CachedNetworkImageProvider(channel.logo), fit: BoxFit.contain)
+                                      : null,
                                 ),
+                                child: channel.logo.isEmpty ? const Center(child: Icon(Icons.tv, color: Colors.grey)) : null,
                               ),
                             ),
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  child: Container(
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFF2C2C2C),
-                                      borderRadius: BorderRadius.circular(10),
-                                      image: channel.logo.isNotEmpty
-                                          ? DecorationImage(
-                                              image: CachedNetworkImageProvider(channel.logo),
-                                              fit: BoxFit.contain,
-                                            )
-                                          : null,
-                                    ),
-                                    child: channel.logo.isEmpty
-                                        ? const Center(child: Icon(Icons.tv, color: Colors.grey))
-                                        : null,
-                                  ),
-                                ),
-                                const SizedBox(height: 5),
-                                Text(
-                                  channel.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(fontSize: 10, color: Colors.white70),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ],
+                            const SizedBox(height: 6),
+                            Text(
+                              channel.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontSize: 10, color: Colors.white70),
+                              textAlign: TextAlign.center,
                             ),
-                          );
-                        },
-                      ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
@@ -345,26 +327,27 @@ class _HomePageState extends State<HomePage> {
   }
 }
 
-// --- PLAYER SCREEN ---
+// --- PLAYER SCREEN (With PiP) ---
 class PlayerScreen extends StatefulWidget {
   final Channel channel;
   final List<Channel> allChannels;
-
   const PlayerScreen({super.key, required this.channel, required this.allChannels});
 
   @override
   State<PlayerScreen> createState() => _PlayerScreenState();
 }
 
-class _PlayerScreenState extends State<PlayerScreen> {
+class _PlayerScreenState extends State<PlayerScreen> with WidgetsBindingObserver {
   late VideoPlayerController _videoPlayerController;
   ChewieController? _chewieController;
-  bool isError = false;
+  final Floating _floating = Floating(); // PiP Controller
   late List<Channel> relatedChannels;
+  bool isPiPMode = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     WakelockPlus.enable();
     relatedChannels = widget.allChannels
         .where((c) => c.group == widget.channel.group && c.name != widget.channel.name)
@@ -372,189 +355,238 @@ class _PlayerScreenState extends State<PlayerScreen> {
     initializePlayer();
   }
 
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Detect when user leaves app to potentially trigger PiP automatically (if configured)
+    if (state == AppLifecycleState.inactive) {
+      // _enablePip(); // Optional: Auto enable on minimize
+    }
+  }
+
   Future<void> initializePlayer() async {
-    try {
-      // Support for networkUrl handles both HTTP and HTTPS if Cleartext is enabled in Manifest
-      _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(widget.channel.url));
-      await _videoPlayerController.initialize();
-      
-      _chewieController = ChewieController(
-        videoPlayerController: _videoPlayerController,
-        autoPlay: true,
-        looping: false,
-        aspectRatio: 16 / 9,
-        isLive: true, // Optimized for Live TV
-        allowedScreenSleep: false,
-        errorBuilder: (context, errorMessage) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error, color: Colors.red, size: 40),
-                const SizedBox(height: 10),
-                Text("Error: $errorMessage", style: const TextStyle(color: Colors.white)),
-                const SizedBox(height: 10),
-                ElevatedButton(
-                  onPressed: () {
-                    setState(() {
-                      isError = false;
-                      initializePlayer();
-                    });
-                  },
-                  child: const Text("Retry"),
-                )
-              ],
-            ),
-          );
-        },
-        materialProgressColors: ChewieProgressColors(
-          playedColor: Colors.redAccent,
-          handleColor: Colors.redAccent,
-          backgroundColor: Colors.grey.shade800,
-          bufferedColor: Colors.white30,
-        ),
-      );
-      setState(() {});
-    } catch (e) {
-      setState(() => isError = true);
+    _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(widget.channel.url));
+    await _videoPlayerController.initialize();
+    
+    _chewieController = ChewieController(
+      videoPlayerController: _videoPlayerController,
+      autoPlay: true,
+      looping: false,
+      isLive: true,
+      aspectRatio: 16 / 9,
+      allowedScreenSleep: false,
+      errorBuilder: (context, errorMessage) => const Center(child: Text("Stream Error", style: TextStyle(color: Colors.red))),
+    );
+    setState(() {});
+  }
+
+  Future<void> _enablePip() async {
+    final status = await _floating.enable(aspectRatio: const Rational.landscape());
+    if (status == PiPStatus.enabled) {
+      setState(() => isPiPMode = true);
     }
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _videoPlayerController.dispose();
     _chewieController?.dispose();
     WakelockPlus.disable();
     super.dispose();
   }
 
-  void _launchTelegram() async {
-    final uri = Uri.parse(telegramUrl);
-    if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Could not launch Telegram")));
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(widget.channel.name)),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // PLAYER
-          AspectRatio(
-            aspectRatio: 16 / 9,
-            child: Container(
-              color: Colors.black,
-              child: isError
-                  ? Center(
-                      child: Column(
+    return PiPSwitcher(
+      childWhenDisabled: Scaffold(
+        appBar: AppBar(title: Text(widget.channel.name)),
+        body: Column(
+          children: [
+            // VIDEO PLAYER CONTAINER
+            Stack(
+              alignment: Alignment.topRight,
+              children: [
+                AspectRatio(
+                  aspectRatio: 16 / 9,
+                  child: Container(
+                    color: Colors.black,
+                    child: _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
+                        ? Chewie(controller: _chewieController!)
+                        : const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
+                  ),
+                ),
+                // PIP BUTTON (Overlay on Video)
+                Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: IconButton(
+                    onPressed: _enablePip,
+                    icon: const Icon(Icons.picture_in_picture_alt, color: Colors.white),
+                    tooltip: "Enter PiP Mode",
+                    style: IconButton.styleFrom(backgroundColor: Colors.black45),
+                  ),
+                )
+              ],
+            ),
+
+            // CONTENT BELOW PLAYER (Hidden in PiP)
+            Expanded(
+              child: Column(
+                children: [
+                  GestureDetector(
+                    onTap: () => launchUrl(Uri.parse(telegramUrl), mode: LaunchMode.externalApplication),
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      color: const Color(0xFF0088CC),
+                      child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.broken_image, color: Colors.red, size: 40),
-                          const SizedBox(height: 10),
-                          const Text("Stream Error (Offline or Unsupported)", style: TextStyle(color: Colors.white)),
+                          Icon(Icons.telegram, color: Colors.white),
+                          SizedBox(width: 10),
+                          Text("JOIN TELEGRAM CHANNEL", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                         ],
                       ),
-                    )
-                  : _chewieController != null && _chewieController!.videoPlayerController.value.isInitialized
-                      ? Chewie(controller: _chewieController!)
-                      : const Center(child: CircularProgressIndicator(color: Colors.redAccent)),
-            ),
-          ),
-
-          // TELEGRAM BANNER
-          GestureDetector(
-            onTap: _launchTelegram,
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              color: const Color(0xFF0088CC),
-              child: const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.telegram, color: Colors.white),
-                  SizedBox(width: 10),
-                  Text("JOIN TELEGRAM CHANNEL", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1)),
+                    ),
+                  ),
+                  
+                  const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: Align(alignment: Alignment.centerLeft, child: Text("More Channels", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey))),
+                  ),
+                  
+                  Expanded(
+                    child: ListView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      itemCount: relatedChannels.length,
+                      itemBuilder: (ctx, index) {
+                        final ch = relatedChannels[index];
+                        return ListTile(
+                          contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                          leading: Container(
+                            width: 60, height: 40,
+                            decoration: BoxDecoration(
+                              color: Colors.grey[900],
+                              borderRadius: BorderRadius.circular(6),
+                              image: ch.logo.isNotEmpty ? DecorationImage(image: CachedNetworkImageProvider(ch.logo), fit: BoxFit.contain) : null,
+                            ),
+                          ),
+                          title: Text(ch.name, style: const TextStyle(color: Colors.white)),
+                          trailing: const Icon(Icons.play_circle_outline, color: Colors.redAccent),
+                          onTap: () => Navigator.pushReplacement(
+                            context, MaterialPageRoute(builder: (_) => PlayerScreen(channel: ch, allChannels: widget.allChannels))
+                          ),
+                        );
+                      },
+                    ),
+                  ),
                 ],
               ),
             ),
-          ),
-
-          // RELATED LIST
-          const Padding(
-            padding: EdgeInsets.all(10.0),
-            child: Text("More Channels", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.grey)),
-          ),
-
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              itemCount: relatedChannels.length,
-              itemBuilder: (ctx, index) {
-                final ch = relatedChannels[index];
-                return ListTile(
-                  contentPadding: const EdgeInsets.symmetric(vertical: 5),
-                  leading: Container(
-                    width: 60,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: Colors.grey[900],
-                      borderRadius: BorderRadius.circular(5),
-                      image: ch.logo.isNotEmpty ? DecorationImage(image: CachedNetworkImageProvider(ch.logo), fit: BoxFit.contain) : null,
-                    ),
-                    child: ch.logo.isEmpty ? const Icon(Icons.tv, size: 20) : null,
-                  ),
-                  title: Text(ch.name, style: const TextStyle(color: Colors.white, fontSize: 14)),
-                  subtitle: Text(ch.group, style: const TextStyle(color: Colors.grey, fontSize: 10)),
-                  trailing: const Icon(Icons.play_circle_outline, color: Colors.redAccent),
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PlayerScreen(channel: ch, allChannels: widget.allChannels),
-                      ),
-                    );
-                  },
-                );
-              },
-            ),
-          ),
-        ],
+          ],
+        ),
+      ),
+      // PiP Mode UI (Only Video)
+      childWhenEnabled: AspectRatio(
+        aspectRatio: 16 / 9,
+        child: Container(
+          color: Colors.black,
+          child: _chewieController != null
+              ? Chewie(controller: _chewieController!)
+              : const Center(child: CircularProgressIndicator()),
+        ),
       ),
     );
   }
 }
 
-// --- INFO PAGE ---
+// --- INFO PAGE (UPDATED) ---
 class InfoPage extends StatelessWidget {
   const InfoPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("About")),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(30.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+      appBar: AppBar(title: const Text("About App")),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const SizedBox(height: 20),
+            Image.asset('assets/logo.png', width: 100, errorBuilder: (c,o,s)=>const Icon(Icons.live_tv, size: 80, color: Colors.red)),
+            const SizedBox(height: 15),
+            const Text("mxliveoo", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
+            const Text("v1.1.0 (Premium)", style: TextStyle(color: Colors.grey)),
+            
+            const SizedBox(height: 30),
+            
+            // App Info Card
+            _buildInfoCard(
+              title: "App Features",
+              content: "• 500+ Live Channels\n• Picture-in-Picture (PiP) Mode\n• Fast Streaming (M3U8/MP4)\n• Real-time Updates",
+              icon: Icons.featured_play_list,
+            ),
+            
+            const SizedBox(height: 15),
+
+            // Dev Info Card
+            _buildInfoCard(
+              title: "Developer",
+              content: "Name: Sultan Arabi\nRole: Lettel Developer\nFocus: Flutter & Streaming Tech",
+              icon: Icons.code,
+            ),
+
+            const SizedBox(height: 30),
+
+            // Contact Button
+            SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton.icon(
+                onPressed: () => launchUrl(Uri.parse(contactEmail)),
+                icon: const Icon(Icons.email_outlined),
+                label: const Text("Contact Developer"),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.redAccent,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                ),
+              ),
+            ),
+            
+            const SizedBox(height: 15),
+            
+            TextButton(
+              onPressed: () => launchUrl(Uri.parse(telegramUrl), mode: LaunchMode.externalApplication),
+              child: const Text("Join Telegram Community", style: TextStyle(color: Color(0xFF0088CC))),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoCard({required String title, required String content, required IconData icon}) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF252525),
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.white10),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Image.asset('assets/logo.png', width: 100, errorBuilder: (c,o,s)=>const Icon(Icons.live_tv, size: 80, color: Colors.red)),
-              const SizedBox(height: 20),
-              const Text("mxliveoo", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
-              const Text("Version 1.0.0", style: TextStyle(color: Colors.grey)),
-              const SizedBox(height: 40),
-              const Text("Premium Live TV Streaming App", style: TextStyle(fontSize: 16)),
-              const SizedBox(height: 40),
-              const Divider(),
-              const SizedBox(height: 20),
-              const Text("Developer", style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
-              const Text("Sultan Arabi (Lettel Developer)", style: TextStyle(fontSize: 18)),
+              Icon(icon, color: Colors.redAccent),
+              const SizedBox(width: 10),
+              Text(title, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
             ],
           ),
-        ),
+          const Divider(color: Colors.white10, height: 20),
+          Text(content, style: const TextStyle(height: 1.5, color: Colors.white70)),
+        ],
       ),
     );
   }
