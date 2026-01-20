@@ -1,7 +1,7 @@
 name: mxliveoo
 description: Premium Live TV Streaming App.
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.1.0+1
 
 environment:
   sdk: '>=3.0.0 <4.0.0'
@@ -9,18 +9,19 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  # UI & Utilities
+  # UI & Network
   google_fonts: ^6.1.0
   cupertino_icons: ^1.0.8
   cached_network_image: ^3.3.0
-  marquee: ^2.2.3            # নোটিশ স্ক্রল করার জন্য
-  url_launcher: ^6.2.6       # টেলিগ্রাম বাটন কাজ করার জন্য
-  http: ^1.1.0               # M3U এবং JSON লোড করার জন্য
+  marquee: ^2.2.3
+  url_launcher: ^6.2.6
+  http: ^1.1.0
   
-  # Video Player Core
+  # Video & System
   video_player: ^2.8.1
-  chewie: ^1.7.1             # প্রফেশনাল প্লেয়ার কন্ট্রোল
-  wakelock_plus: ^1.1.4      # ভিডিও চলার সময় স্ক্রিন অন রাখার জন্য
+  chewie: ^1.7.1
+  wakelock_plus: ^1.1.4
+  floating: ^2.0.0      # New package for PiP mode
 
 dev_dependencies:
   flutter_test:
