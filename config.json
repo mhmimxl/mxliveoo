@@ -1,20 +1,15 @@
 {
-  "notice": "Welcome to mxonlive V2! Now with Multiple Server Support. Update now!",
+  "notice": "Welcome to mxonlive V2! Server 1 is optimized for Sports.",
+  "about_notice": "Disclaimer: This app does not host any content. All content is provided by third-party servers. Contact us for removal.",
+  "update_data": {
+    "show": true,
+    "version": "v2.5.0",
+    "note": "New Sports Channels Added!",
+    "download_url": "https://example.com/mxonlive.apk"
+  },
   "servers": [
-    {
-      "id": "server_1",
-      "name": "BDIX",
-      "url": "https://github.com/abusaeeidx/Mrgify-BDIX-IPTV/raw/main/playlist.m3u"
-    },
-    {
-      "id": "server_2",
-      "name": "BPL",
-      "url": "https://raw.githubusercontent.com/abusaeeidx/BPL-Playlist/refs/heads/main/playlist.m3u"
-    },
-    {
-      "id": "server_3",
-      "name": "RoarZone",
-      "url": "https://private-zone-by-xfireflix.pages.dev/playlist-isp-bdix.m3u"
-    }
+    { "id": "s1", "name": "RoarZone", "https://private-zone-by-xfireflix.pages.dev/playlist-isp-bdix.m3u": "..." },
+    { "id": "s2", "name": "BDIX", "https://github.com/abusaeeidx/Mrgify-BDIX-IPTV/raw/main/playlist.m3u": "..." },
+    { "id": "s2", "name": "BPL", "https://raw.githubusercontent.com/abusaeeidx/BPL-Playlist/refs/heads/main/playlist.m3u": "..." }
   ]
 }
