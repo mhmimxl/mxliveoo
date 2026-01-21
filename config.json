@@ -38,6 +38,11 @@
     },
     {
       "id": "s6",
+      "name": "Bangladeshi",
+      "url": "https://github.com/abusaeeidx/Mrgify-BDIX-IPTV/raw/main/playlist.m3u"
+    },
+    {
+      "id": "S7",
       "name": "Ayna",
       "url": "https://raw.githubusercontent.com/abusaeeidx/Ayna-Playlists-free-Version/refs/heads/main/playlist.m3u"
     }
